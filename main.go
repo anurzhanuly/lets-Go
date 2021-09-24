@@ -26,13 +26,22 @@ func showSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func createSnippet(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(405)
+		_, err := w.Write([]byte("Method is not allowed"))
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+	}
+
 	_, err := w.Write([]byte("createSnippet"))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 }
 
-func main() {mux := http.NewServeMux()
+func main() {
+	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
 	mux.HandleFunc("/snippet", showSnippet)
 	mux.HandleFunc("/snippet/create", createSnippet)
