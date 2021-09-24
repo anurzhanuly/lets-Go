@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	template2 "html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,9 +15,17 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := w.Write([]byte("Hello from Snippetbox"))
+	template, err := template2.ParseFiles("./ui/html/home.page.tmpl")
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+
+		return
+	}
+
+	err = template.Execute(w, nil)
+	if err != nil {
+		http.Error(w, "Internal Server Error", 500)
 	}
 }
 
