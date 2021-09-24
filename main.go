@@ -32,6 +32,8 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err.Error())
 		}
+
+		return
 	}
 
 	_, err := w.Write([]byte("createSnippet"))
