@@ -15,7 +15,12 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	template, err := template2.ParseFiles("./ui/html/home.page.tmpl")
+	templates := []string{
+		"./ui/html/home.page.tmpl",
+		"./ui/html/base.layout.tmpl",
+		"./ui/html/footer.partial.tmpl",
+	}
+	template, err := template2.ParseFiles(templates...)
 	if err != nil {
 		log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
@@ -25,6 +30,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 	err = template.Execute(w, nil)
 	if err != nil {
+		log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
 }
