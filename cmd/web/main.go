@@ -37,7 +37,9 @@ func main() {
 	app := &application{
 		errorLog: errorLogger,
 		infoLog:  infoLogger,
-		snippets: &mysql.SnippetModel{},
+		snippets: &mysql.SnippetModel{
+			DB: db,
+		},
 	}
 
 	server := &http.Server{
