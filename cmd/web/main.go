@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	listeningPort := flag.String("addr", ":4000", "HTTP network address")
+	addr := flag.String("addr", ":4000", "HTTP network address")
 	flag.Parse()
 
 	mux := http.NewServeMux()
@@ -22,7 +22,13 @@ func main() {
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	infoLogger.Printf("Starting server on : ", *listeningPort)
-	err := http.ListenAndServe(*listeningPort, mux)
+	server := &http.Server{
+		Addr:     *addr,
+		ErrorLog: errorLogger,
+		Handler:  mux,
+	}
+
+	infoLogger.Printf("Starting server on : ", *addr)
+	err := server.ListenAndServe()
 	errorLogger.Println(err)
 }
