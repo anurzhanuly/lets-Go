@@ -1,6 +1,8 @@
 package main
 
 import (
+	"anurzhanuly/snippetbox/pkg/models"
+	"errors"
 	"fmt"
 	template2 "html/template"
 	"net/http"
@@ -40,10 +42,19 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
+	rows, err := app.snippets.Get(id)
 	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+
 		return
 	}
+
+	fmt.Fprintf(w, "%v", rows)
+
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
