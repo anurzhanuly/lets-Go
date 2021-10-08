@@ -4,7 +4,7 @@ import (
 	"anurzhanuly/snippetbox/pkg/models"
 	"errors"
 	"fmt"
-	template2 "html/template"
+	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -16,45 +16,73 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates := []string{
-		"./ui/html/home.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-		"./ui/html/footer.partial.tmpl",
-	}
-	template, err := template2.ParseFiles(templates...)
+	s, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, err)
-
 		return
 	}
 
-	err = template.Execute(w, nil)
-	if err != nil {
-		app.serverError(w, err)
+	for _, snippet := range s {
+		fmt.Fprintf(w, "%v\n", snippet)
 	}
+
+	//templates := []string{
+	//	"./ui/html/home.page.tmpl",
+	//	"./ui/html/base.layout.tmpl",
+	//	"./ui/html/footer.partial.tmpl",
+	//}
+	//template, err := template2.ParseFiles(templates...)
+	//if err != nil {
+	//	app.serverError(w, err)
+	//
+	//	return
+	//}
+	//
+	//err = template.Execute(w, nil)
+	//if err != nil {
+	//	app.serverError(w, err)
+	//}
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+
 	if err != nil || id < 1 {
 		app.notFound(w)
-
 		return
 	}
 
-	rows, err := app.snippets.Get(id)
+	s, err := app.snippets.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
 			app.serverError(w, err)
 		}
-
 		return
 	}
 
-	fmt.Fprintf(w, "%v", rows)
+	// Initialize a slice containing the paths to the show.page.tmpl file,
+	// plus the base layout and footer partial that we made earlier.
+	files := []string{
+		"./ui/html/show.page.tmpl",
+		"./ui/html/base.layout.tmpl",
+		"./ui/html/footer.partial.tmpl",
+	}
 
+	// Parse the template files...
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	// And then execute them. Notice how we are passing in the snippet
+	// data (a models.Snippet struct) as the final parameter.
+	err = ts.Execute(w, s)
+	if err != nil {
+		app.serverError(w, err)
+	}
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
