@@ -5,19 +5,25 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *mysql.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *mysql.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
-	addr := flag.String("addr", ":4000", "HTTP network address")
+	addr := flag.String(
+		"addr",
+		":4000",
+		"HTTP network address",
+	)
 	dsn := flag.String(
 		"dsn",
 		"web:Project_mysql#65@/snippetbox?parseTime=true",
@@ -34,12 +40,16 @@ func main() {
 	}
 	defer db.Close()
 
+	templateCache, err := newTemplateCache("./ui/html/")
+	if err != nil {
+		errorLogger.Fatal(err)
+	}
+
 	app := &application{
-		errorLog: errorLogger,
-		infoLog:  infoLogger,
-		snippets: &mysql.SnippetModel{
-			DB: db,
-		},
+		errorLog:      errorLogger,
+		infoLog:       infoLogger,
+		snippets:      &mysql.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	server := &http.Server{
