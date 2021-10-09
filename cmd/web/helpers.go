@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"runtime/debug"
@@ -34,17 +35,22 @@ func (app *application) notFound(w http.ResponseWriter) {
 }
 
 func (app *application) render(w http.ResponseWriter, r *http.Request, name string, td *templateData) {
-	// Retrieve the appropriate template set from the cache based on the page name
-	// (like 'home.page.tmpl'). If no entry exists in the cache with the
-	// provided name, call the serverError helper method that we made earlier.
 	ts, ok := app.templateCache[name]
 	if !ok {
 		app.serverError(w, fmt.Errorf("The template %s does not exist", name))
 		return
 	}
-	// Execute the template set, passing in any dynamic data.
-	err := ts.Execute(w, td)
+
+	buffer := new(bytes.Buffer)
+
+	err := ts.Execute(buffer, td)
 	if err != nil {
 		app.serverError(w, err)
+		return
+	}
+
+	_, err = buffer.WriteTo(w)
+	if err != nil {
+		return
 	}
 }
